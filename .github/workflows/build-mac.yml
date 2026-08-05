@@ -2,38 +2,32 @@ name: Build macOS App
 
 on:
   push:
-    branches: [ main, master ] # Срабатывает при пуше в ветку main или master
+    branches: [ main, master ]
 
 jobs:
   build:
-    runs-on: macos-latest # Запускаем на виртуальной машине Mac
+    runs-on: macos-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Xcode
-      uses: maxim-lobanov/setup-xcode@v1
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v2
       with:
-        xcode-version: latest
+        swift-version: "5.9"
 
-    - name: Build project
+    - name: Build with Swift
+      run: swift build -c release
+
+    - name: Package App
       run: |
-        # Укажи путь к своему проекту или воркспейсу (.xcodeproj / .xcworkspace)
-        # И имя своей схемы (Scheme)
-        xcodebuild -project WinterCode_macOS.xcodeproj \
-                   -scheme WinterScheme \
-                   -configuration Release \
-                   -derivedDataPath Build \
-                   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-      
-    - name: Zip the .app for download
-      run: |
-        cd Build/Build/Products/Release/
-        zip -r WinterCode.zip *.app
+        mkdir -p WinterCode.app/Contents/MacOS
+        cp .build/release/WinterCode-for-Mac WinterCode.app/Contents/MacOS/WinterCode
+        zip -r WinterCode-macOS.zip WinterCode.app
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: WinterCode-macOSApp
-        path: Build/Build/Products/Release/WinterCode.zip
+        name: WinterCode-Bundle
+        path: WinterCode-macOS.zip
