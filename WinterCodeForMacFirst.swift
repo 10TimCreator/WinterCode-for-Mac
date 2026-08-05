@@ -1,6 +1,7 @@
 import Cocoa
 import Foundation
 import AVFoundation
+import UniformTypeIdentifiers
 
 // MARK: - 3D Engine Structures & Math
 
@@ -858,7 +859,7 @@ public class WinterInterpreter {
                     if parts.count > 2 {
                         if parts[1] == "load" && parts.count > 3 {
                             let path = parts[3...].joined(separator: " ")
-                            try? audioEngine.loadAudio(alias: parts[2], pathOrUrl: path)
+                            try audioEngine.loadAudio(alias: parts[2], pathOrUrl: path)
                         } else if parts[1] == "play" {
                             let start = parts.count > 3 ? getVal(parts[3]) : 0
                             audioEngine.playAudio(alias: parts[2], startSeconds: start)
@@ -920,7 +921,7 @@ public class WinterInterpreter {
 
 // MARK: - WinterIDE Form & Application
 
-public class WinterIDE: NSWindow, NSTextDelegate, NSWindowDelegate {
+public class WinterIDE: NSWindow, NSTextViewDelegate, NSWindowDelegate {
     private var editorView = NSTextView()
     private var consoleOut = NSTextView()
     private var splitView = NSSplitView()
@@ -1100,8 +1101,12 @@ end
     
     @objc private func openFile() {
         let panel = NSOpenPanel()
-        panel.allowedFileTypes = ["wc", "txt"]
-        if panel.runModal() == .OK, let url = panel.url, let content = try? String(contentsOf: url) {
+        if #available(macOS 11.0, *) {
+            panel.allowedContentTypes = [UTType(filenameExtension: "wc") ?? .plainText, .plainText]
+        } else {
+            panel.allowedFileTypes = ["wc", "txt"]
+        }
+        if panel.runModal() == .OK, let url = panel.url, let content = try? String(contentsOf: url, encoding: .utf8) {
             editorView.string = content
             highlightSyntax()
         }
@@ -1109,7 +1114,11 @@ end
     
     @objc private func saveFile() {
         let panel = NSSavePanel()
-        panel.allowedFileTypes = ["wc"]
+        if #available(macOS 11.0, *) {
+            panel.allowedContentTypes = [UTType(filenameExtension: "wc") ?? .plainText]
+        } else {
+            panel.allowedFileTypes = ["wc"]
+        }
         if panel.runModal() == .OK, let url = panel.url {
             try? editorView.string.write(to: url, atomically: true, encoding: .utf8)
         }
