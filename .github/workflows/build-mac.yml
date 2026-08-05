@@ -1,0 +1,39 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ main, master ] # Срабатывает при пуше в ветку main или master
+
+jobs:
+  build:
+    runs-on: macos-latest # Запускаем на виртуальной машине Mac
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest
+
+    - name: Build project
+      run: |
+        # Укажи путь к своему проекту или воркспейсу (.xcodeproj / .xcworkspace)
+        # И имя своей схемы (Scheme)
+        xcodebuild -project WinterCode_macOS \
+                   -scheme WinterScheme \
+                   -configuration Release \
+                   -derivedDataPath Build \
+                   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+      
+    - name: Zip the .app for download
+      run: |
+        cd Build/Build/Products/Release/
+        zip -r MyAwesomeApp.zip *.app
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: macOS-App-Bundle
+        path: Build/Build/Products/Release/*.zipb
