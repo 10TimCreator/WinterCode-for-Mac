@@ -12,22 +12,41 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Swift
-      uses: swift-actions/setup-swift@v2
-      with:
-        swift-version: "5.9"
-
-    - name: Build with Swift
-      run: swift build -c release
-
-    - name: Package App
+    - name: Compile Swift Code
       run: |
-        mkdir -p WinterCode.app/Contents/MacOS
-        cp .build/release/WinterCode-for-Mac WinterCode.app/Contents/MacOS/WinterCode
-        zip -r WinterCode-macOS.zip WinterCode.app
+        SWIFT_FILE=$(find . -maxdepth 2 -name "*.swift" | head -n 1)
+        echo "Compiling file: $SWIFT_FILE"
+        swiftc "$SWIFT_FILE" -o WinterCodeForMacFirstExecutable
 
-    - name: Upload artifact
+    - name: Create macOS App Bundle
+      run: |
+        mkdir -p WinterCodeForMacFirst.app/Contents/MacOS
+        mkdir -p WinterCodeForMacFirst.app/Contents/Resources
+        mv WinterCodeForMacFirstExecutable WinterCodeForMacFirst.app/Contents/MacOS/WinterCodeForMacFirst
+        
+        cat << 'EOF' > WinterCodeForMacFirst.app/Contents/Info.plist
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>WinterCodeForMacFirst</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.timcreator.wintercodeformacfirst</string>
+            <key>CFBundleName</key>
+            <string>WinterCodeForMacFirst</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0</string>
+        </dict>
+        </plist>
+        EOF
+
+        zip -r WinterCodeForMacFirst-macOS.zip WinterCodeForMacFirst.app
+
+    - name: Upload App Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: WinterCode-Bundle
-        path: WinterCode-macOS.zip
+        name: WinterCodeForMacFirst-macOS-App
+        path: WinterCodeForMacFirst-macOS.zip
