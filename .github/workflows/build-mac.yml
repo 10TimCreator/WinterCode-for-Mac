@@ -21,7 +21,7 @@ jobs:
       run: |
         # Укажи путь к своему проекту или воркспейсу (.xcodeproj / .xcworkspace)
         # И имя своей схемы (Scheme)
-        xcodebuild -project WinterCode_macOS \
+        xcodebuild -project WinterCode_macOS.xcodeproj \
                    -scheme WinterScheme \
                    -configuration Release \
                    -derivedDataPath Build \
@@ -30,10 +30,10 @@ jobs:
     - name: Zip the .app for download
       run: |
         cd Build/Build/Products/Release/
-        zip -r MyAwesomeApp.zip *.app
+        zip -r WinterCode.zip *.app
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: macOS-App-Bundle
-        path: Build/Build/Products/Release/*.zipb
+        name: WinterCode-macOSApp
+        path: Build/Build/Products/Release/WinterCode.zip
